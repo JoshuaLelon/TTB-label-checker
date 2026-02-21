@@ -20,6 +20,7 @@ AI-powered label verification for the Alcohol and Tobacco Tax and Trade Bureau. 
 ## Quick Start
 
 ```bash
+cp .env.example .env       # add your Anthropic API key
 npm install
 npm run dev
 ```
@@ -31,3 +32,4 @@ Open [http://localhost:3000](http://localhost:3000).
 - [Design doc](docs/design.md) — approach, decisions, assumptions, trade-offs
 - [Flow diagrams](docs/flowcharts.md) — page map and per-field comparison logic
 - [Theme reference](docs/theme.md) — TTB/USWDS colors, typography, shadcn/ui token mapping
+- [Labeling standards](docs/labeling-standards.md) — TTB regulatory requirements for alcohol labels
