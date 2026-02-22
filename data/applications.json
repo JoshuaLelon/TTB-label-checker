@@ -97,9 +97,9 @@
     "countryOfOrigin": "Mexico",
     "allergens": [],
     "ageStatement": null,
-    "status": "passed",
+    "status": "not_done",
     "labelImagePath": "/labels/06-casa-del-sol-tequila.jpg",
-    "notes": "All fields verified — exact match."
+    "notes": null
   },
   {
     "id": "COLA-2024-00715",
@@ -114,9 +114,9 @@
     "countryOfOrigin": null,
     "allergens": ["Contains sulfites"],
     "ageStatement": null,
-    "status": "passed",
+    "status": "not_done",
     "labelImagePath": "/labels/07-chateau-lumiere-chardonnay.jpg",
-    "notes": "All fields verified — exact match."
+    "notes": null
   },
   {
     "id": "COLA-2024-00821",
@@ -131,9 +131,9 @@
     "countryOfOrigin": null,
     "allergens": [],
     "ageStatement": null,
-    "status": "passed",
+    "status": "not_done",
     "labelImagePath": "/labels/08-pacific-crest-ipa.jpg",
-    "notes": "All fields verified — exact match."
+    "notes": null
   },
   {
     "id": "COLA-2024-00937",
@@ -148,9 +148,9 @@
     "countryOfOrigin": "Barbados",
     "allergens": [],
     "ageStatement": null,
-    "status": "failed",
+    "status": "not_done",
     "labelImagePath": "/labels/09-caribbean-blue-rum.jpg",
-    "notes": "Country of origin ('Product of Barbados') missing from label."
+    "notes": null
   },
   {
     "id": "COLA-2024-01042",
@@ -165,8 +165,8 @@
     "countryOfOrigin": null,
     "allergens": ["Contains sulfites"],
     "ageStatement": null,
-    "status": "failed",
+    "status": "not_done",
     "labelImagePath": "/labels/10-brut-etoile-sparkling.jpg",
-    "notes": "Class/type mismatch: label reads 'Champagne' but application states 'Sparkling Wine'. Domestic product cannot use 'Champagne' designation."
+    "notes": null
   }
 ]
