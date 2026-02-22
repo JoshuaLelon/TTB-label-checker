@@ -51,6 +51,7 @@ AI-powered tool that compares an alcohol label image against its application dat
     - Should match TTB's design and aesthetic.
     - A divese set of 10 alcohol label applications is okay for the MVP.
     - It's okay that it was only tested on the latest version of Google Chrome and Safari on a desktop (no mobile testing).
+    - The site is publicly accessible with no login gate. An alert has been configured on the Anthropic API to flag unexpected volume spikes.
 
 ## Decisions
 
