@@ -9,16 +9,16 @@
  *   depends_on: [components/status-badge, components/verification-results, components/ui/*, lib/types.ts]
  *   exposes: [ApplicationDetail]
  * invariants:
- *   - Verify button only shows when status is not_done and no result yet
- *   - Pass/Fail buttons only show after verification completes on not_done applications
- *   - Error messages distinguish retryable (5xx) from non-retryable (4xx) errors
+ *   - Verify button always available until user decides pass/fail
+ *   - Pass/Fail buttons only show after verification completes
+ *   - All state is ephemeral — page refresh resets everything
  * authority:
  *   decides: [UI state machine for verification flow]
- *   delegates: [Verification to /api/verify, status updates to /api/status, routing to Next.js]
+ *   delegates: [Verification to /api/verify, routing to Next.js]
  * extension_policy: Extract sub-sections into components if complexity grows
  * failure_contract: Catches fetch errors and displays user-friendly messages
- * testing_contract: Test verification flow, error handling, and read-only mode
- * references: [app/api/verify/route.ts, app/api/status/route.ts]
+ * testing_contract: Test verification flow and error handling
+ * references: [app/api/verify/route.ts]
  */
 "use client";
 
@@ -36,16 +36,17 @@ import type { Application, VerificationResult } from "@/lib/types";
 
 interface Props {
   application: Application;
-  cachedResult?: VerificationResult | null;
 }
 
-export function ApplicationDetail({ application, cachedResult }: Props) {
+export function ApplicationDetail({ application }: Props) {
   const router = useRouter();
   const [verificationResult, setVerificationResult] =
-    useState<VerificationResult | null>(cachedResult ?? null);
+    useState<VerificationResult | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const isReadOnly = application.status !== "not_done";
+  const [decidedStatus, setDecidedStatus] = useState<
+    "passed" | "failed" | null
+  >(null);
 
   async function handleVerify() {
     setIsVerifying(true);
@@ -74,34 +75,8 @@ export function ApplicationDetail({ application, cachedResult }: Props) {
     }
   }
 
-  async function handleStatusUpdate(status: "passed" | "failed") {
-    if (!verificationResult) {
-      return;
-    }
-    try {
-      const res = await fetch("/api/status", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          applicationId: application.id,
-          status,
-          verificationResult,
-        }),
-      });
-      if (!res.ok) {
-        const body = await res.json().catch(() => null);
-        const msg = body?.error ?? "Failed to update status";
-        setError(res.status >= 500 ? `${msg}. Please try again.` : msg);
-        return;
-      }
-      router.push("/");
-      router.refresh();
-    } catch (error: unknown) {
-      if (!(error instanceof Error)) {
-        throw error;
-      }
-      setError("Network error — please try again.");
-    }
+  function handleStatusUpdate(status: "passed" | "failed") {
+    setDecidedStatus(status);
   }
 
   const fields = [
@@ -125,14 +100,14 @@ export function ApplicationDetail({ application, cachedResult }: Props) {
           <ArrowLeft className="mr-1 h-4 w-4" /> Back
         </Button>
         <h1 className="font-semibold text-2xl">{application.brandName}</h1>
-        <StatusBadge status={application.status} />
+        <StatusBadge status={decidedStatus ?? "not_done"} />
       </div>
 
       {/* Verification Results */}
       {verificationResult && (
         <>
           <VerificationResults fields={verificationResult.fields} />
-          {!isReadOnly && (
+          {!decidedStatus && (
             <div className="flex gap-3">
               <Button
                 className="bg-green-600 hover:bg-green-700"
@@ -215,22 +190,10 @@ export function ApplicationDetail({ application, cachedResult }: Props) {
       </div>
 
       {/* Verify button */}
-      {!(isVerifying || verificationResult || isReadOnly) && (
+      {!(isVerifying || decidedStatus) && (
         <Button onClick={handleVerify} size="lg">
-          Verify Label
+          {verificationResult ? "Re-verify Label" : "Verify Label"}
         </Button>
-      )}
-
-      {/* Read-only notes for already-decided applications */}
-      {isReadOnly && application.notes && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Notes</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground text-sm">{application.notes}</p>
-          </CardContent>
-        </Card>
       )}
     </div>
   );

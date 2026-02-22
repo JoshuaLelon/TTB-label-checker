@@ -6,11 +6,11 @@
  *   - Verification UI logic (handled by ApplicationDetail component)
  *   - Data mutation (handled by API routes)
  * boundaries:
- *   depends_on: [next/navigation, components/application-detail, lib/data.ts, lib/verification-cache.ts]
+ *   depends_on: [next/navigation, components/application-detail, lib/data.ts]
  *   exposes: [ApplicationPage]
  * invariants:
  *   - Calls notFound() if application ID doesn't exist
- *   - Passes cached verification result if available
+ *   - Passes application data to client component; no cached state
  * authority:
  *   decides: [Data fetching, 404 handling]
  *   delegates: [All UI to ApplicationDetail component]
@@ -22,7 +22,6 @@
 import { notFound } from "next/navigation";
 import { ApplicationDetail } from "@/components/application-detail";
 import { getApplication } from "@/lib/data";
-import { getCachedResult } from "@/lib/verification-cache";
 
 export default async function ApplicationPage({
   params,
@@ -36,9 +35,5 @@ export default async function ApplicationPage({
     notFound();
   }
 
-  const cachedResult = getCachedResult(id) ?? null;
-
-  return (
-    <ApplicationDetail application={application} cachedResult={cachedResult} />
-  );
+  return <ApplicationDetail application={application} />;
 }

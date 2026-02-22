@@ -7,7 +7,7 @@
  *   - Business logic or data transformation
  * boundaries:
  *   depends_on: [zod]
- *   exposes: [verifyRequestSchema, statusRequestSchema, extractedLabelFieldsSchema]
+ *   exposes: [verifyRequestSchema, extractedLabelFieldsSchema]
  * invariants:
  *   - Schemas mirror the shapes in lib/types.ts
  *   - All API inputs are validated through these schemas before use
@@ -23,24 +23,6 @@ import { z } from "zod";
 
 export const verifyRequestSchema = z.object({
   applicationId: z.string().min(1, "applicationId is required"),
-});
-
-export const statusRequestSchema = z.object({
-  applicationId: z.string().min(1, "applicationId is required"),
-  status: z.enum(["passed", "failed"]),
-  verificationResult: z.object({
-    fields: z.array(
-      z.object({
-        fieldName: z.string(),
-        applicationValue: z.string().nullable(),
-        labelValue: z.string().nullable(),
-        result: z.enum(["pass", "flag", "fail", "not_found"]),
-        note: z.string(),
-      })
-    ),
-    overallResult: z.enum(["pass", "flag", "fail"]),
-    timestamp: z.string(),
-  }),
 });
 
 export const extractedLabelFieldsSchema = z.object({

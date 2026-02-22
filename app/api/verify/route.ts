@@ -6,15 +6,15 @@
  *   - Label comparison logic (handled by lib/compare.ts)
  *   - Data persistence (handled by lib/data.ts)
  * boundaries:
- *   depends_on: [node:fs, node:path, @anthropic-ai/sdk, lib/compare.ts, lib/data.ts, lib/schemas.ts, lib/types.ts, lib/verification-cache.ts, lib/logger.ts]
+ *   depends_on: [node:fs, node:path, @anthropic-ai/sdk, lib/compare.ts, lib/data.ts, lib/schemas.ts, lib/types.ts, lib/logger.ts]
  *   exposes: [POST handler]
  * invariants:
  *   - Request body is validated via Zod before processing
  *   - Claude API response is validated against extractedLabelFieldsSchema
- *   - Results are cached to avoid redundant API calls
+ *   - Every request re-runs the AI extraction (no caching)
  * authority:
  *   decides: [Claude prompt, image encoding, response parsing]
- *   delegates: [Field comparison to lib/compare.ts, caching to lib/verification-cache.ts]
+ *   delegates: [Field comparison to lib/compare.ts]
  * extension_policy: Swap AI provider by changing extractFromLabel implementation
  * failure_contract: Returns 400 (bad request), 404 (not found), 500 (file read), or 502 (AI error)
  * testing_contract: Test request validation, cache hit, extraction parsing, and error responses
@@ -29,7 +29,6 @@ import { getApplication } from "@/lib/data";
 import { logger } from "@/lib/logger";
 import { extractedLabelFieldsSchema, verifyRequestSchema } from "@/lib/schemas";
 import type { ExtractedLabelFields } from "@/lib/types";
-import { getCachedResult, setCachedResult } from "@/lib/verification-cache";
 
 const anthropic = new Anthropic();
 
@@ -152,11 +151,6 @@ export async function POST(request: Request) {
 
   const { applicationId } = parsed.data;
 
-  const cached = getCachedResult(applicationId);
-  if (cached) {
-    return NextResponse.json({ result: cached });
-  }
-
   const application = await getApplication(applicationId);
   if (!application) {
     return NextResponse.json(
@@ -197,7 +191,6 @@ export async function POST(request: Request) {
   }
 
   const result = compareFields(application, extraction.data);
-  setCachedResult(applicationId, result);
 
   return NextResponse.json({ result });
 }
