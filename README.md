@@ -29,6 +29,7 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ## Documentation
 
+- [Agent guards](docs/agent-guards.md) — 10-check static analysis system that keeps AI agents within architectural boundaries
 - [Design doc](docs/design.md) — approach, decisions, assumptions, trade-offs
 - [Flow diagrams](docs/flowcharts.md) — page map and per-field comparison logic
 - [Theme reference](docs/theme.md) — TTB/USWDS colors, typography, shadcn/ui token mapping
