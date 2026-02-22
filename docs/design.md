@@ -50,6 +50,7 @@ AI-powered tool that compares an alcohol label image against its application dat
     - No integration with the COLA system.
     - Should match TTB's design and aesthetic.
     - A divese set of 10 alcohol label applications is okay for the MVP.
+    - It's okay that it was only tested on the latest version of Google Chrome and Safari on a desktop (no mobile testing).
 
 ## Decisions
 
@@ -88,3 +89,7 @@ AI-powered tool that compares an alcohol label image against its application dat
 - I am familiar with the Next.js, TypeScript, and Tailwind stack and there is ample LLM training data on these technologies.
 - Vercel was chosen over Railway, AWS, and other deployment platforms because of its smooth developer experience and speed to delivery.
 - Theme is based on TTB.gov's use of the [U.S. Web Design System (USWDS)](https://designsystem.digital.gov/). See [theme.md](theme.md) for full color/typography reference and shadcn/ui token mapping.
+
+**Code Quality Guardrails**:
+
+AI-assisted development can introduce subtle architectural drift, unused code, and inconsistent patterns. To maintain code quality as the codebase evolves, a 10-check static analysis system runs automatically on every commit (via pre-commit hook) and in CI. Checks include type safety, linting, dependency boundaries, dead code detection, copy-paste detection, and design guard validation. Design guards are structured comments at the top of each module that declare its role, boundaries, and invariants — giving both human reviewers and AI agents clear constraints on what a module should and should not do. See [agent-guards.md](agent-guards.md) for the full specification.
