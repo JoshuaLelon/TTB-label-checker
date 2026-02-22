@@ -1,0 +1,123 @@
+{
+  "_comment": "Expected per-field comparison results. Derived from docs/dataset.md intentional errors.",
+  "COLA-2024-00147": {
+    "Brand Name": "pass",
+    "Fanciful Name": "pass",
+    "Class/Type": "pass",
+    "ABV": "pass",
+    "Net Contents": "pass",
+    "Government Warning": "pass",
+    "Bottler Name": "pass",
+    "Bottler Address": "pass",
+    "Country of Origin": "pass",
+    "Age Statement": "pass"
+  },
+  "COLA-2024-00203": {
+    "Brand Name": "pass",
+    "Fanciful Name": "pass",
+    "Class/Type": "pass",
+    "ABV": "pass",
+    "Net Contents": "pass",
+    "Government Warning": "pass",
+    "Bottler Name": "pass",
+    "Bottler Address": "pass",
+    "Country of Origin": "pass",
+    "Age Statement": "pass"
+  },
+  "COLA-2024-00318": {
+    "Brand Name": "pass",
+    "Fanciful Name": "pass",
+    "Class/Type": "pass",
+    "ABV": "pass",
+    "Net Contents": "pass",
+    "Government Warning": "pass",
+    "Bottler Name": "pass",
+    "Bottler Address": "pass",
+    "Country of Origin": "pass",
+    "Age Statement": "pass"
+  },
+  "COLA-2024-00412": {
+    "Brand Name": "pass",
+    "Fanciful Name": "pass",
+    "Class/Type": "pass",
+    "ABV": "fail",
+    "Net Contents": "pass",
+    "Government Warning": "pass",
+    "Bottler Name": "pass",
+    "Bottler Address": "pass",
+    "Country of Origin": "pass",
+    "Age Statement": "pass"
+  },
+  "COLA-2024-00529": {
+    "Brand Name": "pass",
+    "Fanciful Name": "pass",
+    "Class/Type": "pass",
+    "ABV": "pass",
+    "Net Contents": "pass",
+    "Government Warning": "fail",
+    "Bottler Name": "pass",
+    "Bottler Address": "pass",
+    "Country of Origin": "pass",
+    "Age Statement": "pass"
+  },
+  "COLA-2024-00634": {
+    "Brand Name": "pass",
+    "Fanciful Name": "pass",
+    "Class/Type": "pass",
+    "ABV": "pass",
+    "Net Contents": "pass",
+    "Government Warning": "pass",
+    "Bottler Name": "pass",
+    "Bottler Address": "pass",
+    "Country of Origin": "pass",
+    "Age Statement": "pass"
+  },
+  "COLA-2024-00715": {
+    "Brand Name": "pass",
+    "Fanciful Name": "pass",
+    "Class/Type": "pass",
+    "ABV": "pass",
+    "Net Contents": "pass",
+    "Government Warning": "pass",
+    "Bottler Name": "pass",
+    "Bottler Address": "pass",
+    "Country of Origin": "pass",
+    "Age Statement": "pass"
+  },
+  "COLA-2024-00821": {
+    "Brand Name": "pass",
+    "Fanciful Name": "pass",
+    "Class/Type": "pass",
+    "ABV": "pass",
+    "Net Contents": "pass",
+    "Government Warning": "pass",
+    "Bottler Name": "pass",
+    "Bottler Address": "pass",
+    "Country of Origin": "pass",
+    "Age Statement": "pass"
+  },
+  "COLA-2024-00937": {
+    "Brand Name": "pass",
+    "Fanciful Name": "pass",
+    "Class/Type": "pass",
+    "ABV": "pass",
+    "Net Contents": "pass",
+    "Government Warning": "pass",
+    "Bottler Name": "pass",
+    "Bottler Address": "pass",
+    "Country of Origin": "not_found",
+    "Age Statement": "pass"
+  },
+  "COLA-2024-01042": {
+    "Brand Name": "pass",
+    "Fanciful Name": "pass",
+    "Class/Type": "fail",
+    "ABV": "pass",
+    "Net Contents": "pass",
+    "Government Warning": "pass",
+    "Bottler Name": "pass",
+    "Bottler Address": "pass",
+    "Country of Origin": "pass",
+    "Age Statement": "pass"
+  }
+}

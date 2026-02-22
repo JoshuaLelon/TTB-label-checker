@@ -18,6 +18,7 @@
     "check:dead-code": "knip",
     "check:duplicates": "jscpd app components lib scripts",
     "check:guards": "tsx scripts/check-design-guards.ts",
+    "eval": "tsx scripts/eval.ts",
     "prepare": "husky"
   },
   "lint-staged": {
