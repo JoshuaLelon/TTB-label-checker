@@ -1,13 +1,40 @@
+/**
+ * @design-guard
+ * role: Field-by-field comparison of COLA application data against AI-extracted label text
+ * layer: core
+ * non_goals:
+ *   - Label image processing or OCR (handled by API route + Claude)
+ *   - Data persistence or caching
+ * boundaries:
+ *   depends_on: [lib/types.ts]
+ *   exposes: [compareFields, fuzzyMatch, numericMatch, strictMatch]
+ * invariants:
+ *   - compareFields always returns a result for every field in FIELD_DEFS
+ *   - overallResult is "fail" if any field fails, "flag" if any flags, else "pass"
+ *   - Pure function — no side effects
+ * authority:
+ *   decides: [Match strategy per field, overall pass/fail logic]
+ *   delegates: [Field definitions to FIELD_DEFS constant]
+ * extension_policy: Add new matchers or field definitions as label requirements grow
+ * failure_contract: Never throws — always returns a VerificationResult
+ * testing_contract: Test each matcher (fuzzy, numeric, strict) and edge cases (nulls, empty strings)
+ * references: [TTB COLA label requirements]
+ */
 import type {
   Application,
+  ComparisonResult,
   ExtractedLabelFields,
   FieldComparison,
-  ComparisonResult,
   VerificationResult,
 } from "./types";
 
+const WHITESPACE_RE = /\s+/g;
+const ALL_WHITESPACE_RE = /\s/g;
+const WORD_SPLIT_RE = /\s+/;
+const CASING_DIFF_RE = /"(.+)" → "(.+)"/;
+
 function normalize(s: string): string {
-  return s.replace(/\s+/g, " ").trim().toLowerCase();
+  return s.replace(WHITESPACE_RE, " ").trim().toLowerCase();
 }
 
 export function fuzzyMatch(
@@ -23,7 +50,8 @@ export function fuzzyMatch(
 
   // Check if only casing/whitespace differs
   if (
-    normApp.replace(/\s/g, "") === normLabel.replace(/\s/g, "")
+    normApp.replace(ALL_WHITESPACE_RE, "") ===
+    normLabel.replace(ALL_WHITESPACE_RE, "")
   ) {
     return {
       result: "flag",
@@ -41,10 +69,10 @@ export function numericMatch(
   appValue: string,
   labelValue: string
 ): { result: ComparisonResult; note: string } {
-  const appNum = parseFloat(appValue.replace(/[^0-9.]/g, ""));
-  const labelNum = parseFloat(labelValue.replace(/[^0-9.]/g, ""));
+  const appNum = Number.parseFloat(appValue.replace(/[^0-9.]/g, ""));
+  const labelNum = Number.parseFloat(labelValue.replace(/[^0-9.]/g, ""));
 
-  if (isNaN(appNum) || isNaN(labelNum)) {
+  if (Number.isNaN(appNum) || Number.isNaN(labelNum)) {
     return { result: "fail", note: "Could not parse numeric value" };
   }
 
@@ -67,8 +95,8 @@ export function strictMatch(
   }
 
   // Find differing words
-  const appWords = appValue.split(/\s+/);
-  const labelWords = labelValue.split(/\s+/);
+  const appWords = appValue.split(WORD_SPLIT_RE);
+  const labelWords = labelValue.split(WORD_SPLIT_RE);
   const diffs: string[] = [];
 
   const maxLen = Math.max(appWords.length, labelWords.length);
@@ -86,8 +114,8 @@ export function strictMatch(
 
   // If differences are minor (just casing), flag instead of fail
   const allCasingOnly = diffs.every((d) => {
-    const parts = d.match(/"(.+)" → "(.+)"/);
-    return parts && parts[1].toLowerCase() === parts[2].toLowerCase();
+    const parts = d.match(CASING_DIFF_RE);
+    return parts !== null && parts[1].toLowerCase() === parts[2].toLowerCase();
   });
 
   if (allCasingOnly) {
@@ -104,23 +132,68 @@ export function strictMatch(
 }
 
 interface FieldDef {
-  fieldName: string;
   appKey: keyof Application;
+  fieldName: string;
   labelKey: keyof ExtractedLabelFields;
   matcher: "fuzzy" | "numeric" | "strict";
 }
 
 const FIELD_DEFS: FieldDef[] = [
-  { fieldName: "Brand Name", appKey: "brandName", labelKey: "brandName", matcher: "fuzzy" },
-  { fieldName: "Fanciful Name", appKey: "fancifulName", labelKey: "fancifulName", matcher: "fuzzy" },
-  { fieldName: "Class/Type", appKey: "classType", labelKey: "classType", matcher: "fuzzy" },
+  {
+    fieldName: "Brand Name",
+    appKey: "brandName",
+    labelKey: "brandName",
+    matcher: "fuzzy",
+  },
+  {
+    fieldName: "Fanciful Name",
+    appKey: "fancifulName",
+    labelKey: "fancifulName",
+    matcher: "fuzzy",
+  },
+  {
+    fieldName: "Class/Type",
+    appKey: "classType",
+    labelKey: "classType",
+    matcher: "fuzzy",
+  },
   { fieldName: "ABV", appKey: "abv", labelKey: "abv", matcher: "numeric" },
-  { fieldName: "Net Contents", appKey: "netContents", labelKey: "netContents", matcher: "fuzzy" },
-  { fieldName: "Government Warning", appKey: "governmentWarning", labelKey: "governmentWarning", matcher: "strict" },
-  { fieldName: "Bottler Name", appKey: "bottlerName", labelKey: "bottlerName", matcher: "fuzzy" },
-  { fieldName: "Bottler Address", appKey: "bottlerAddress", labelKey: "bottlerAddress", matcher: "fuzzy" },
-  { fieldName: "Country of Origin", appKey: "countryOfOrigin", labelKey: "countryOfOrigin", matcher: "fuzzy" },
-  { fieldName: "Age Statement", appKey: "ageStatement", labelKey: "ageStatement", matcher: "fuzzy" },
+  {
+    fieldName: "Net Contents",
+    appKey: "netContents",
+    labelKey: "netContents",
+    matcher: "fuzzy",
+  },
+  {
+    fieldName: "Government Warning",
+    appKey: "governmentWarning",
+    labelKey: "governmentWarning",
+    matcher: "strict",
+  },
+  {
+    fieldName: "Bottler Name",
+    appKey: "bottlerName",
+    labelKey: "bottlerName",
+    matcher: "fuzzy",
+  },
+  {
+    fieldName: "Bottler Address",
+    appKey: "bottlerAddress",
+    labelKey: "bottlerAddress",
+    matcher: "fuzzy",
+  },
+  {
+    fieldName: "Country of Origin",
+    appKey: "countryOfOrigin",
+    labelKey: "countryOfOrigin",
+    matcher: "fuzzy",
+  },
+  {
+    fieldName: "Age Statement",
+    appKey: "ageStatement",
+    labelKey: "ageStatement",
+    matcher: "fuzzy",
+  },
 ];
 
 const matchers = {
@@ -138,7 +211,7 @@ export function compareFields(
     const labelValue = extracted[def.labelKey] as string | null;
 
     // Both null/empty — not applicable, treat as pass
-    if (!appValue && !labelValue) {
+    if (!(appValue || labelValue)) {
       return {
         fieldName: def.fieldName,
         applicationValue: appValue,
@@ -170,7 +243,11 @@ export function compareFields(
       };
     }
 
-    const { result, note } = matchers[def.matcher](appValue!, labelValue!);
+    // Both values are confirmed non-null by the guards above
+    const { result, note } = matchers[def.matcher](
+      appValue as string,
+      labelValue as string
+    );
     return {
       fieldName: def.fieldName,
       applicationValue: appValue,

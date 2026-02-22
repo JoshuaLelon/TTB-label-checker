@@ -1,64 +1,67 @@
+/**
+ * @design-guard
+ * role: Shared type definitions for the TTB label checker domain
+ * layer: core
+ * non_goals:
+ *   - Runtime validation (handled by lib/schemas.ts)
+ *   - Business logic (handled by lib/compare.ts)
+ * boundaries:
+ *   depends_on: []
+ *   exposes: [Application, ExtractedLabelFields, ComparisonResult, FieldComparison, VerificationResult]
+ * invariants:
+ *   - Types are the single source of truth for domain shapes
+ *   - No runtime code — types only
+ * authority:
+ *   decides: [Domain model shape]
+ *   delegates: [Validation to schemas, comparison logic to compare]
+ * extension_policy: Add new interfaces/types as domain grows
+ * failure_contract: No runtime failures — compile-time only
+ * testing_contract: No tests needed — type-only module
+ * references: [data/applications.json schema]
+ */
 export interface Application {
-  id: string;
-  brandName: string;
-  fancifulName: string | null;
-  classType: string;
   abv: string;
-  netContents: string;
-  governmentWarning: string;
-  bottlerName: string;
-  bottlerAddress: string;
-  countryOfOrigin: string | null;
-  allergens: string[];
   ageStatement: string | null;
-  status: "not_done" | "passed" | "failed";
+  allergens: string[];
+  bottlerAddress: string;
+  bottlerName: string;
+  brandName: string;
+  classType: string;
+  countryOfOrigin: string | null;
+  fancifulName: string | null;
+  governmentWarning: string;
+  id: string;
   labelImagePath: string;
+  netContents: string;
   notes: string | null;
+  status: "not_done" | "passed" | "failed";
 }
 
 export interface ExtractedLabelFields {
-  brandName: string | null;
-  fancifulName: string | null;
-  classType: string | null;
   abv: string | null;
-  netContents: string | null;
-  governmentWarning: string | null;
-  bottlerName: string | null;
-  bottlerAddress: string | null;
-  countryOfOrigin: string | null;
   ageStatement: string | null;
+  bottlerAddress: string | null;
+  bottlerName: string | null;
+  brandName: string | null;
+  classType: string | null;
+  countryOfOrigin: string | null;
+  fancifulName: string | null;
+  governmentWarning: string | null;
+  netContents: string | null;
 }
 
 export type ComparisonResult = "pass" | "flag" | "fail" | "not_found";
 
 export interface FieldComparison {
-  fieldName: string;
   applicationValue: string | null;
+  fieldName: string;
   labelValue: string | null;
-  result: ComparisonResult;
   note: string;
+  result: ComparisonResult;
 }
 
 export interface VerificationResult {
   fields: FieldComparison[];
   overallResult: "pass" | "flag" | "fail";
   timestamp: string;
-}
-
-export interface VerifyRequest {
-  applicationId: string;
-}
-
-export interface VerifyResponse {
-  result: VerificationResult;
-}
-
-export interface StatusRequest {
-  applicationId: string;
-  status: "passed" | "failed";
-  verificationResult: VerificationResult;
-}
-
-export interface StatusResponse {
-  success: boolean;
 }

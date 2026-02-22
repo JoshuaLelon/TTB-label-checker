@@ -1,5 +1,27 @@
+/**
+ * @design-guard
+ * role: Table displaying field-by-field verification results with pass/fail/flag indicators
+ * layer: ui
+ * non_goals:
+ *   - Verification logic (handled by lib/compare.ts)
+ *   - Data fetching or API calls
+ * boundaries:
+ *   depends_on: [components/ui/table, lib/types.ts, lucide-react]
+ *   exposes: [VerificationResults]
+ * invariants:
+ *   - Renders one row per FieldComparison
+ *   - Row background color reflects result severity
+ * authority:
+ *   decides: [Result icon mapping, row styling]
+ *   delegates: [Table rendering to shadcn Table, comparison logic to lib/compare.ts]
+ * extension_policy: Add columns or result types as verification evolves
+ * failure_contract: Pure render — no failure modes
+ * testing_contract: Verify correct icon and background for each result type
+ * references: [lib/types.ts FieldComparison]
+ */
 "use client";
 
+import { AlertTriangle, CheckCircle2, HelpCircle, XCircle } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -8,7 +30,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { CheckCircle2, AlertTriangle, XCircle, HelpCircle } from "lucide-react";
 import type { FieldComparison } from "@/lib/types";
 
 const RESULT_ICONS = {
@@ -31,7 +52,7 @@ export function VerificationResults({ fields }: { fields: FieldComparison[] }) {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-10"></TableHead>
+            <TableHead className="w-10" />
             <TableHead>Field</TableHead>
             <TableHead>Application Value</TableHead>
             <TableHead>Label Value</TableHead>
@@ -40,13 +61,13 @@ export function VerificationResults({ fields }: { fields: FieldComparison[] }) {
         </TableHeader>
         <TableBody>
           {fields.map((field) => (
-            <TableRow key={field.fieldName} className={RESULT_BG[field.result]}>
+            <TableRow className={RESULT_BG[field.result]} key={field.fieldName}>
               <TableCell>{RESULT_ICONS[field.result]}</TableCell>
               <TableCell className="font-medium">{field.fieldName}</TableCell>
-              <TableCell className="max-w-48 truncate text-sm text-muted-foreground">
+              <TableCell className="max-w-48 truncate text-muted-foreground text-sm">
                 {field.applicationValue ?? "—"}
               </TableCell>
-              <TableCell className="max-w-48 truncate text-sm text-muted-foreground">
+              <TableCell className="max-w-48 truncate text-muted-foreground text-sm">
                 {field.labelValue ?? "—"}
               </TableCell>
               <TableCell className="text-sm">{field.note}</TableCell>

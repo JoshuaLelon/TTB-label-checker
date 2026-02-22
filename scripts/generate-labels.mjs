@@ -1,16 +1,19 @@
-import { readFileSync, writeFileSync, mkdirSync } from "fs";
-import { resolve, dirname } from "path";
-import { fileURLToPath } from "url";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const ROOT = resolve(__dirname, "..");
+const FILE_EXT_RE = /\.\w+$/;
+const Dirname = dirname(fileURLToPath(import.meta.url));
+const ROOT = resolve(Dirname, "..");
 
 // Load .env manually
 const envContent = readFileSync(resolve(ROOT, ".env"), "utf-8");
 const env = {};
 for (const line of envContent.split("\n")) {
   const match = line.match(/^([^#=]+)=(.*)$/);
-  if (match) env[match[1].trim()] = match[2].trim();
+  if (match) {
+    env[match[1].trim()] = match[2].trim();
+  }
 }
 
 // Key #1 has no image gen quota — start with keys 2 and 3
@@ -229,9 +232,7 @@ Design style: Luxurious celebration — black and gold color scheme, star/conste
 // CLI: pass label numbers to regenerate only those (e.g., `node generate-labels.mjs 1 2 4 6 9`)
 const args = process.argv.slice(2).map(Number).filter(Boolean);
 const selectedLabels =
-  args.length > 0
-    ? labels.filter((_, i) => args.includes(i + 1))
-    : labels;
+  args.length > 0 ? labels.filter((_, i) => args.includes(i + 1)) : labels;
 
 let currentKeyIndex = 0;
 
@@ -242,7 +243,7 @@ async function generateImage(label, attempt = 0) {
   );
 
   try {
-    const res = await fetch(BASE_URL + `?key=${key}`, {
+    const res = await fetch(`${BASE_URL}?key=${key}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -269,7 +270,7 @@ async function generateImage(label, attempt = 0) {
 
     if (!imagePart) {
       console.error(
-        `   No image in response. Parts:`,
+        "   No image in response. Parts:",
         parts.map((p) => p.text || "[non-text]").join(", ")
       );
       if (attempt < API_KEYS.length - 1) {
@@ -285,7 +286,7 @@ async function generateImage(label, attempt = 0) {
       (imagePart.inlineData || imagePart.inline_data).mime_type;
     const ext = mimeType?.includes("jpeg") ? "jpg" : "png";
 
-    const finalFilename = label.filename.replace(/\.\w+$/, `.${ext}`);
+    const finalFilename = label.filename.replace(FILE_EXT_RE, `.${ext}`);
     const outPath = resolve(OUTPUT_DIR, finalFilename);
     writeFileSync(outPath, Buffer.from(b64, "base64"));
     console.log(
@@ -322,6 +323,9 @@ async function main() {
       const filename = await generateImage(label);
       results.push({ label: label.filename, status: "ok", saved: filename });
     } catch (err) {
+      if (!(err instanceof Error)) {
+        throw err;
+      }
       results.push({
         label: label.filename,
         status: "error",

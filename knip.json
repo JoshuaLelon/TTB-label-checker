@@ -1,0 +1,24 @@
+{
+  "$schema": "https://unpkg.com/knip@latest/schema.json",
+  "include": [
+    "files",
+    "dependencies",
+    "exports",
+    "types",
+    "enumMembers",
+    "classMembers",
+    "duplicates"
+  ],
+  "exclude": ["unresolved"],
+  "entry": ["scripts/generate-labels.mjs"],
+  "project": [
+    "app/**/*.{ts,tsx}",
+    "components/**/*.{ts,tsx}",
+    "lib/**/*.{ts,tsx}",
+    "scripts/**/*.{ts,mjs}"
+  ],
+  "ignore": ["components/ui/**"],
+  "ignoreDependencies": ["tw-animate-css", "shadcn"],
+  "ignoreExportsUsedInFile": true,
+  "ignoreMembers": ["getDerivedStateFromError", "componentDidCatch", "render"]
+}

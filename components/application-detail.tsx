@@ -1,16 +1,38 @@
+/**
+ * @design-guard
+ * role: Main application detail view — shows COLA data, label image, triggers verification, and handles pass/fail
+ * layer: ui
+ * non_goals:
+ *   - Server-side data fetching (handled by page.tsx)
+ *   - Verification logic (handled by API route + lib/compare.ts)
+ * boundaries:
+ *   depends_on: [components/status-badge, components/verification-results, components/ui/*, lib/types.ts]
+ *   exposes: [ApplicationDetail]
+ * invariants:
+ *   - Verify button only shows when status is not_done and no result yet
+ *   - Pass/Fail buttons only show after verification completes on not_done applications
+ *   - Error messages distinguish retryable (5xx) from non-retryable (4xx) errors
+ * authority:
+ *   decides: [UI state machine for verification flow]
+ *   delegates: [Verification to /api/verify, status updates to /api/status, routing to Next.js]
+ * extension_policy: Extract sub-sections into components if complexity grows
+ * failure_contract: Catches fetch errors and displays user-friendly messages
+ * testing_contract: Test verification flow, error handling, and read-only mode
+ * references: [app/api/verify/route.ts, app/api/status/route.ts]
+ */
 "use client";
 
-import { useState } from "react";
+import { ArrowLeft, Loader2 } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { StatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { StatusBadge } from "@/components/status-badge";
 import { VerificationResults } from "@/components/verification-results";
 import type { Application, VerificationResult } from "@/lib/types";
-import { Loader2, ArrowLeft } from "lucide-react";
 
 interface Props {
   application: Application;
@@ -42,7 +64,10 @@ export function ApplicationDetail({ application, cachedResult }: Props) {
       }
       const data = await res.json();
       setVerificationResult(data.result);
-    } catch {
+    } catch (error: unknown) {
+      if (!(error instanceof Error)) {
+        throw error;
+      }
       setError("Network error — please try again.");
     } finally {
       setIsVerifying(false);
@@ -50,7 +75,9 @@ export function ApplicationDetail({ application, cachedResult }: Props) {
   }
 
   async function handleStatusUpdate(status: "passed" | "failed") {
-    if (!verificationResult) return;
+    if (!verificationResult) {
+      return;
+    }
     try {
       const res = await fetch("/api/status", {
         method: "POST",
@@ -69,7 +96,10 @@ export function ApplicationDetail({ application, cachedResult }: Props) {
       }
       router.push("/");
       router.refresh();
-    } catch {
+    } catch (error: unknown) {
+      if (!(error instanceof Error)) {
+        throw error;
+      }
       setError("Network error — please try again.");
     }
   }
@@ -91,10 +121,10 @@ export function ApplicationDetail({ application, cachedResult }: Props) {
     <div className="space-y-6">
       {/* Back + Header */}
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="sm" onClick={() => router.push("/")}>
+        <Button onClick={() => router.push("/")} size="sm" variant="ghost">
           <ArrowLeft className="mr-1 h-4 w-4" /> Back
         </Button>
-        <h1 className="text-2xl font-semibold">{application.brandName}</h1>
+        <h1 className="font-semibold text-2xl">{application.brandName}</h1>
         <StatusBadge status={application.status} />
       </div>
 
@@ -105,14 +135,14 @@ export function ApplicationDetail({ application, cachedResult }: Props) {
           {!isReadOnly && (
             <div className="flex gap-3">
               <Button
-                onClick={() => handleStatusUpdate("passed")}
                 className="bg-green-600 hover:bg-green-700"
+                onClick={() => handleStatusUpdate("passed")}
               >
                 Pass Application
               </Button>
               <Button
-                variant="destructive"
                 onClick={() => handleStatusUpdate("failed")}
+                variant="destructive"
               >
                 Fail Application
               </Button>
@@ -128,7 +158,9 @@ export function ApplicationDetail({ application, cachedResult }: Props) {
           <CardContent className="py-8">
             <div className="flex flex-col items-center gap-4">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              <p className="text-muted-foreground">Analyzing label with AI...</p>
+              <p className="text-muted-foreground">
+                Analyzing label with AI...
+              </p>
               <div className="w-full max-w-md space-y-3">
                 <Skeleton className="h-4 w-full" />
                 <Skeleton className="h-4 w-3/4" />
@@ -140,7 +172,7 @@ export function ApplicationDetail({ application, cachedResult }: Props) {
       )}
 
       {error && (
-        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-red-800 text-sm">
           {error}
         </div>
       )}
@@ -154,8 +186,8 @@ export function ApplicationDetail({ application, cachedResult }: Props) {
           <CardContent>
             <dl className="space-y-3">
               {fields.map((f) => (
-                <div key={f.label} className="flex justify-between gap-4">
-                  <dt className="text-sm font-medium text-muted-foreground">
+                <div className="flex justify-between gap-4" key={f.label}>
+                  <dt className="font-medium text-muted-foreground text-sm">
                     {f.label}
                   </dt>
                   <dd className="text-right text-sm">{f.value}</dd>
@@ -172,10 +204,10 @@ export function ApplicationDetail({ application, cachedResult }: Props) {
           <CardContent>
             <div className="relative aspect-[3/4] w-full overflow-hidden rounded-lg border">
               <Image
-                src={application.labelImagePath}
                 alt={`${application.brandName} label`}
-                fill
                 className="object-contain"
+                fill
+                src={application.labelImagePath}
               />
             </div>
           </CardContent>
@@ -183,8 +215,8 @@ export function ApplicationDetail({ application, cachedResult }: Props) {
       </div>
 
       {/* Verify button */}
-      {!isVerifying && !verificationResult && !isReadOnly && (
-        <Button size="lg" onClick={handleVerify}>
+      {!(isVerifying || verificationResult || isReadOnly) && (
+        <Button onClick={handleVerify} size="lg">
           Verify Label
         </Button>
       )}
@@ -196,7 +228,7 @@ export function ApplicationDetail({ application, cachedResult }: Props) {
             <CardTitle>Notes</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-muted-foreground">{application.notes}</p>
+            <p className="text-muted-foreground text-sm">{application.notes}</p>
           </CardContent>
         </Card>
       )}
