@@ -20,6 +20,7 @@
  * references: [lib/data.ts getApplications]
  */
 import Link from "next/link";
+import { PendingCount } from "@/components/pending-count";
 import { SessionStatusBadge } from "@/components/session-status-badge";
 import {
   Table,
@@ -40,11 +41,7 @@ export default async function Home() {
     <div className="space-y-6">
       <div>
         <h1 className="font-semibold text-2xl">COLA Applications</h1>
-        <p className="mt-1 text-muted-foreground text-sm">
-          {applications.length} applications &middot;{" "}
-          {applications.filter((a) => a.status === "not_done").length} pending
-          review
-        </p>
+        <PendingCount total={applications.length} />
       </div>
 
       <div className="rounded-lg border">

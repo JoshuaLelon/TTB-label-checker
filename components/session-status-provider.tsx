@@ -32,11 +32,13 @@ import {
 type Status = "passed" | "failed";
 
 interface SessionStatusContextValue {
+  decidedCount: number;
   getStatus: (id: string) => Status | undefined;
   setStatus: (id: string, status: Status) => void;
 }
 
 const SessionStatusContext = createContext<SessionStatusContextValue>({
+  decidedCount: 0,
   getStatus: () => undefined,
   setStatus: () => undefined,
 });
@@ -52,9 +54,11 @@ export function SessionStatusProvider({ children }: { children: ReactNode }) {
     setStatuses((prev) => new Map(prev).set(id, status));
   }, []);
 
+  const decidedCount = statuses.size;
+
   const value = useMemo(
-    () => ({ getStatus, setStatus }),
-    [getStatus, setStatus]
+    () => ({ decidedCount, getStatus, setStatus }),
+    [decidedCount, getStatus, setStatus]
   );
 
   return <SessionStatusContext value={value}>{children}</SessionStatusContext>;
