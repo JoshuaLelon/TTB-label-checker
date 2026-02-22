@@ -126,3 +126,15 @@
     @apply bg-background text-foreground;
   }
 }
+
+@layer utilities {
+  .result-pass {
+    color: oklch(0.638 0.209 143.6); /* green - success */
+  }
+  .result-flag {
+    color: oklch(0.840 0.162 81.6); /* yellow - warning */
+  }
+  .result-fail {
+    color: oklch(0.588 0.191 37.4); /* red - error */
+  }
+}
