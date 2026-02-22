@@ -6,7 +6,7 @@
  *   - Server-side data fetching (handled by page.tsx)
  *   - Verification logic (handled by API route + lib/compare.ts)
  * boundaries:
- *   depends_on: [components/status-badge, components/verification-results, components/ui/*, lib/types.ts]
+ *   depends_on: [components/status-badge, components/ui/*, lib/types.ts, lucide-react]
  *   exposes: [ApplicationDetail]
  * invariants:
  *   - Verify button always available until user decides pass/fail
@@ -22,16 +22,16 @@
  */
 "use client";
 
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { buildFields, FieldRow, ResultIcon } from "@/components/field-row";
+import { useSessionStatus } from "@/components/session-status-provider";
 import { StatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { Skeleton } from "@/components/ui/skeleton";
-import { VerificationResults } from "@/components/verification-results";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import type { Application, VerificationResult } from "@/lib/types";
 
 interface Props {
@@ -40,6 +40,7 @@ interface Props {
 
 export function ApplicationDetail({ application }: Props) {
   const router = useRouter();
+  const { setStatus: setSessionStatus } = useSessionStatus();
   const [verificationResult, setVerificationResult] =
     useState<VerificationResult | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
@@ -47,10 +48,12 @@ export function ApplicationDetail({ application }: Props) {
   const [decidedStatus, setDecidedStatus] = useState<
     "passed" | "failed" | null
   >(null);
+  const [isImageEnlarged, setIsImageEnlarged] = useState(false);
 
   async function handleVerify() {
     setIsVerifying(true);
     setError(null);
+    setVerificationResult(null);
     try {
       const res = await fetch("/api/verify", {
         method: "POST",
@@ -77,20 +80,10 @@ export function ApplicationDetail({ application }: Props) {
 
   function handleStatusUpdate(status: "passed" | "failed") {
     setDecidedStatus(status);
+    setSessionStatus(application.id, status);
   }
 
-  const fields = [
-    { label: "COLA ID", value: application.id },
-    { label: "Brand Name", value: application.brandName },
-    { label: "Fanciful Name", value: application.fancifulName ?? "—" },
-    { label: "Class/Type", value: application.classType },
-    { label: "ABV", value: `${application.abv}%` },
-    { label: "Net Contents", value: application.netContents },
-    { label: "Bottler", value: application.bottlerName },
-    { label: "Address", value: application.bottlerAddress },
-    { label: "Country of Origin", value: application.countryOfOrigin ?? "—" },
-    { label: "Age Statement", value: application.ageStatement ?? "—" },
-  ];
+  const fields = buildFields(application);
 
   return (
     <div className="space-y-6">
@@ -103,49 +96,6 @@ export function ApplicationDetail({ application }: Props) {
         <StatusBadge status={decidedStatus ?? "not_done"} />
       </div>
 
-      {/* Verification Results */}
-      {verificationResult && (
-        <>
-          <VerificationResults fields={verificationResult.fields} />
-          {!decidedStatus && (
-            <div className="flex gap-3">
-              <Button
-                className="bg-green-600 hover:bg-green-700"
-                onClick={() => handleStatusUpdate("passed")}
-              >
-                Pass Application
-              </Button>
-              <Button
-                onClick={() => handleStatusUpdate("failed")}
-                variant="destructive"
-              >
-                Fail Application
-              </Button>
-            </div>
-          )}
-          <Separator />
-        </>
-      )}
-
-      {/* Verifying skeleton */}
-      {isVerifying && (
-        <Card>
-          <CardContent className="py-8">
-            <div className="flex flex-col items-center gap-4">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              <p className="text-muted-foreground">
-                Analyzing label with AI...
-              </p>
-              <div className="w-full max-w-md space-y-3">
-                <Skeleton className="h-4 w-full" />
-                <Skeleton className="h-4 w-3/4" />
-                <Skeleton className="h-4 w-5/6" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
       {error && (
         <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-red-800 text-sm">
           {error}
@@ -154,47 +104,149 @@ export function ApplicationDetail({ application }: Props) {
 
       {/* App Data + Label Image side by side */}
       <div className="grid gap-6 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Application Data</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <dl className="space-y-3">
-              {fields.map((f) => (
-                <div className="flex justify-between gap-4" key={f.label}>
-                  <dt className="font-medium text-muted-foreground text-sm">
-                    {f.label}
-                  </dt>
-                  <dd className="text-right text-sm">{f.value}</dd>
-                </div>
-              ))}
-            </dl>
-          </CardContent>
-        </Card>
+        <div className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Application Data</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <dl className="space-y-3">
+                {fields.map((f) => {
+                  const result = f.fieldName
+                    ? verificationResult?.fields.find(
+                        (r) => r.fieldName === f.fieldName
+                      )
+                    : undefined;
+
+                  return <FieldRow field={f} key={f.label} result={result} />;
+                })}
+              </dl>
+            </CardContent>
+          </Card>
+        </div>
 
         <Card>
           <CardHeader>
             <CardTitle>Label Image</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="relative aspect-[3/4] w-full overflow-hidden rounded-lg border">
+            <button
+              className="relative w-full cursor-zoom-in"
+              onClick={() => setIsImageEnlarged(true)}
+              type="button"
+            >
               <Image
                 alt={`${application.brandName} label`}
-                className="object-contain"
-                fill
+                className="w-full rounded-lg"
+                height={800}
                 src={application.labelImagePath}
+                width={600}
               />
-            </div>
+            </button>
+            <p className="mt-2 text-center text-muted-foreground text-xs">
+              (click image to enlarge)
+            </p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Verify button */}
-      {!(isVerifying || decidedStatus) && (
-        <Button onClick={handleVerify} size="lg">
-          {verificationResult ? "Re-verify Label" : "Verify Label"}
-        </Button>
+      {/* Verify button — always visible, centered */}
+      {!decidedStatus && (
+        <div className="flex justify-center">
+          <Button
+            className="rounded-full px-6"
+            disabled={isVerifying}
+            onClick={handleVerify}
+          >
+            {isVerifying && "Analyzing..."}
+            {!isVerifying && verificationResult && "Re-analyze Label"}
+            {!(isVerifying || verificationResult) && "Analyze Label"}
+          </Button>
+        </div>
       )}
+
+      {/* Pass/Fail buttons */}
+      {!decidedStatus && (
+        <div className="flex justify-center gap-3">
+          <Button
+            className="rounded-full bg-green-600 px-6 hover:bg-green-700"
+            onClick={() => handleStatusUpdate("passed")}
+          >
+            Pass Application
+          </Button>
+          <Button
+            className="rounded-full px-6"
+            onClick={() => handleStatusUpdate("failed")}
+            variant="destructive"
+          >
+            Fail Application
+          </Button>
+        </div>
+      )}
+
+      {/* Issues list */}
+      {verificationResult &&
+        (() => {
+          const issues = verificationResult.fields.filter(
+            (f) => f.result !== "pass"
+          );
+          if (issues.length === 0) {
+            return null;
+          }
+          return (
+            <div className="flex flex-col items-center space-y-2">
+              {issues.map((f) => (
+                <div
+                  className="flex items-start gap-2 text-sm"
+                  key={f.fieldName}
+                >
+                  <span className="mt-0.5 shrink-0">
+                    <ResultIcon result={f.result} />
+                  </span>
+                  <p>
+                    <span className="font-medium">{f.fieldName}:</span>{" "}
+                    <span className="text-muted-foreground">{f.note}</span>
+                  </p>
+                </div>
+              ))}
+            </div>
+          );
+        })()}
+
+      {/* Back button after decision */}
+      {decidedStatus && (
+        <div className="flex justify-center">
+          <Button
+            className="rounded-full px-6"
+            onClick={() => router.push("/")}
+            variant="outline"
+          >
+            <ArrowLeft className="mr-1 h-4 w-4" />
+            Back to All Applications
+          </Button>
+        </div>
+      )}
+
+      {/* Image lightbox */}
+      <Dialog onOpenChange={setIsImageEnlarged} open={isImageEnlarged}>
+        <DialogContent
+          className="flex h-screen w-screen max-w-none items-center justify-center border-none bg-transparent p-0 shadow-none data-[state=closed]:animate-none data-[state=open]:animate-none sm:max-w-none"
+          onClick={() => setIsImageEnlarged(false)}
+          showCloseButton={false}
+        >
+          <DialogTitle className="sr-only">
+            {application.brandName} label
+          </DialogTitle>
+          <Image
+            alt={`${application.brandName} label`}
+            className="max-h-[85vh] max-w-[90vw] rounded-lg object-contain"
+            height={1600}
+            onClick={(e) => e.stopPropagation()}
+            src={application.labelImagePath}
+            width={1200}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

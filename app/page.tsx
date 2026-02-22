@@ -20,7 +20,7 @@
  * references: [lib/data.ts getApplications]
  */
 import Link from "next/link";
-import { StatusBadge } from "@/components/status-badge";
+import { SessionStatusBadge } from "@/components/session-status-badge";
 import {
   Table,
   TableBody,
@@ -51,9 +51,7 @@ export default async function Home() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>COLA ID</TableHead>
-              <TableHead>Brand Name</TableHead>
-              <TableHead>Class/Type</TableHead>
+              <TableHead>Application</TableHead>
               <TableHead>Status</TableHead>
             </TableRow>
           </TableHeader>
@@ -65,13 +63,14 @@ export default async function Home() {
                     className="font-medium text-primary underline-offset-4 hover:underline"
                     href={`/application/${app.id}`}
                   >
-                    {app.id}
+                    {app.brandName}{" "}
+                    <span className="text-muted-foreground">
+                      ({app.classType})
+                    </span>
                   </Link>
                 </TableCell>
-                <TableCell>{app.brandName}</TableCell>
-                <TableCell>{app.classType}</TableCell>
                 <TableCell>
-                  <StatusBadge status={app.status} />
+                  <SessionStatusBadge id={app.id} />
                 </TableCell>
               </TableRow>
             ))}

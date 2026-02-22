@@ -23,6 +23,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { AppHeader } from "@/components/app-header";
 import { ErrorBoundary } from "@/components/error-boundary";
+import { SessionStatusProvider } from "@/components/session-status-provider";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -52,10 +53,12 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <ErrorBoundary>
-          <AppHeader />
-          <main className="container mx-auto max-w-6xl px-4 py-8">
-            {children}
-          </main>
+          <SessionStatusProvider>
+            <AppHeader />
+            <main className="container mx-auto max-w-6xl px-4 py-8">
+              {children}
+            </main>
+          </SessionStatusProvider>
         </ErrorBoundary>
       </body>
     </html>
